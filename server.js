@@ -1,3 +1,5 @@
+/*jshint esversion: 6 */
+
 /**
  * Sample WebHook app for integrating with the SmartThings One IoT API.
  *
@@ -5,8 +7,6 @@
  * according to the current weather conditions of a user-entered US five-digit
  * Zip Code.
  */
-'use strict';
-
 const express = require('express');
 const bodyParser = require('body-parser');
 const request = require('request');
@@ -27,17 +27,19 @@ const app = express();
 app.use(bodyParser.json());
 
 /**
-* Entry point for callbacks by SmartThings.
-* Every incoming call will have a lifecycle, which determines how the
-* app should respond.
-*
-* All requests will have their HTTP signature verified to ensure the
-* request is actually from SmartThings, except for the PING lifecycle
-* request (which occurs as the app is being created).
-*/
+ * Entry point for callbacks by SmartThings.
+ * Every incoming call will have a lifecycle, which determines how the
+ * app should respond.
+ *
+ * All requests will have their HTTP signature verified to ensure the
+ * request is actually from SmartThings, except for the PING lifecycle
+ * request (which occurs as the app is being created).
+ */
 app.post('/', function (req, response) {
   // We don't yet have the public key during PING (when the app is created),
   // so no need to verify the signature. All other requests are verified.
+  'use strict';
+
   if (req.body && req.body.lifecycle === "PING" || signatureIsVerified(req)) {
     handleRequest(req, response);
   } else {
@@ -46,10 +48,12 @@ app.post('/', function (req, response) {
 });
 
 /**
-* Verifies that the request is actually from SmartThings.
-* @returns true if verified, false otherwise.
-*/
+ * Verifies that the request is actually from SmartThings.
+ * @returns true if verified, false otherwise.
+ */
 function signatureIsVerified(req) {
+  'use strict';
+
   try {
     let parsed = httpSignature.parseRequest(req);
     if (!httpSignature.verifySignature(parsed, publicKey)) {
@@ -64,6 +68,8 @@ function signatureIsVerified(req) {
 }
 
 function handleRequest(req, response) {
+  'use strict';
+
   let evt = req.body;
   let lifecycle = evt.lifecycle;
   let res;
@@ -124,13 +130,15 @@ function handleRequest(req, response) {
 }
 
 /**
-* Turns the configured bulb on and sets the color according to the current
-* temperature and weather conditions.
-*
-* @param {Object} installedApp - The installed app
-* @param {string} token - The OAuth2 token for this installed app
-**/
+ * Turns the configured bulb on and sets the color according to the current
+ * temperature and weather conditions.
+ *
+ * @param {Object} installedApp - The installed app
+ * @param {string} token - The OAuth2 token for this installed app
+ **/
 function setBulbColor(installedApp, token) {
+  'use strict';
+
   const zipCode = installedApp.config.zipCode[0].stringConfig.value;
   const deviceId = installedApp.config.colorLight[0].deviceConfig.deviceId;
   const intervalSetting = installedApp.config.forecastInterval[0].stringConfig.value;
@@ -167,7 +175,7 @@ function setBulbColor(installedApp, token) {
     .catch(function(cmdErr) {
       console.error('Error executing command');
       console.error(prettyjson.render(cmdErr, prettyjsonOptions));
-    })
+    });
   })
   .catch(function(weatherError) {
     console.error("Error getting current weather conditions:");
@@ -182,6 +190,8 @@ function setBulbColor(installedApp, token) {
  * @param {string} token - The OAuth2 token to create the schedule.
  */
 function createSchedule(installedApp, token) {
+  'use strict';
+
   const scheduleSetting = installedApp.config.scheduleInterval[0].stringConfig.value;
 
   const scheduleInterval = stConfig.getScheduleInterval(scheduleSetting);
@@ -199,7 +209,7 @@ function createSchedule(installedApp, token) {
       }).catch(function(createScheduleErr) {
         console.log("Error creating schedule:");
         console.log(prettyjson.render(createScheduleErr, prettyjsonOptions));
-      })
+      });
   }).
   catch(function(deleteScheduleErr) {
     console.log("Error creating schedule:");
@@ -214,6 +224,8 @@ function createSchedule(installedApp, token) {
  * @param {Object} eventData - The eventData associated with this event.
  */
 function handleEvent(eventData) {
+  'use strict';
+
   const eventType = eventData.events[0].eventType;
   const token = eventData.authToken;
   if ("TIMER_EVENT" === eventType) {
@@ -221,7 +233,7 @@ function handleEvent(eventData) {
     console.log(`Received timer event for schedule ${timerEvent.name} at ${timerEvent.time}`);
     setBulbColor(eventData.installedApp, token);
   } else {
-    console.error(`This app only expects TIMER_EVENTs. Got ${eventType}`)
+    console.error(`This app only expects TIMER_EVENTs. Got ${eventType}`);
   }
 }
 
